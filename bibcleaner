@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from collections import *
-import biblib.bib
 import argparse
 import sys
 import flask
@@ -12,7 +10,10 @@ import json
 import pdb
 import random
 import traceback
+from collections import *
 
+import click
+import biblib.bib
 import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
@@ -23,15 +24,28 @@ app = Flask(__name__, template_folder=tmpl_dir)
 
 
 
+# synonyms are reconciled to the dictionary key
+# e.g., all journal and article entry keys are renamed into booktitle keys
 synonyms = dict(
-    booktitle=['journal']
+    booktitle=['journal', 'article']
 )
+
+# These constitute "real" article entries.  
+# We normalize them all into @inproceedings entries
 entry_types = set(['inproceedings', 'article', 'journal'])
+
+# keys part of inproceedings/journal/article entries, skip all others
 entry_keys = ['author', 'title', 'journal', 'booktitle', 'year', 'url']
+
+# throw away all other entry keys, if you change this, make sure to change the entries schema in the 
+# create table statement below.
 allowed_keys = ['type', 'key', 'title', 'year', 'booktitle', 'author', 'howpublished', 'publisher', 'url']
 
 
-SETUPQs = ["""CREATE TABLE if not exists mapping (
+
+# setup database
+
+SETUPQS = ["""CREATE TABLE if not exists mapping (
   id serial,
   oldbook text,
   newbook text
@@ -51,10 +65,10 @@ SETUPQs = ["""CREATE TABLE if not exists mapping (
 """
 ]
 
-DATABASEURI = "sqlite:///test.db"
+DATABASEURI = "sqlite:///bibcleaner.db"
 
 engine = create_engine(DATABASEURI)
-for q in SETUPQs:
+for q in SETUPQS:
   engine.execute(q)
 
 
@@ -76,26 +90,18 @@ def load_bibfile(bibfile, min_crossrefs=None):
   """
   try:
     # Load databases
-    db = biblib.bib.Parser().parse(bibfile, log_fp=sys.stderr).get_entries()
+    db = biblib.bib.Parser(paranoid=False).parse(bibfile, log_fp=sys.stderr).get_entries()
 
     # Optionally resolve cross-references
     if min_crossrefs is not None:
       db = biblib.bib.resolve_crossrefs(
         db, min_crossrefs=min_crossrefs)
   except biblib.messages.InputError:
-    import pdb; pdb.set_trace()
-    sys.exit(1)
-
-  # entry_keys = dict(
-  #     inproceedings=
-  #     article=['author', 'title', 'journal', 'year', 'url'],
-  #     journal=['author', 'title', 'journal', 'year', 'url']
-  # )
-
+    #sys.exit(1)
+    pass
 
 
   ents = []
-  # Pretty-print entries
   for ent in db.values():
     if not ent.key: continue
     if ent.typ in entry_types:
@@ -105,9 +111,11 @@ def load_bibfile(bibfile, min_crossrefs=None):
       continue
 
     vals = [" ".join(ent.get(key, '').split("\n")) for key in keys]
+    # only keep keys that have non-null values
     fields = dict(filter(lambda p: p[1], zip(keys, vals)))
     fields = fix_synonyms(fields, synonyms)
 
+    # change paper entries into @inproceedings
     newent = biblib.bib.Entry(fields.items())
     newent.typ = 'inproceedings'
     newent.key = ent.key
@@ -117,8 +125,9 @@ def load_bibfile(bibfile, min_crossrefs=None):
 
 def print_entries(printout, out, sort):
   """
-  print entries to std, and optionally if out is not None, write to file
+  print entries to stdout, and optionally, if out is not None, write to file
   """
+
   q = """
   SELECT type, key, title, year, newbook as booktitle, author, howpublished, publisher, url
   FROM entries as E,
@@ -127,7 +136,7 @@ def print_entries(printout, out, sort):
         WHERE booktitle NOT IN (SELECT oldbook FROM mapping)
         UNION 
         select oldbook, newbook from mapping) as M
-  WHERE E.booktitle = M.oldbook AND  %s
+  WHERE E.booktitle = M.oldbook
   """
 
   if sort:
@@ -138,9 +147,11 @@ def print_entries(printout, out, sort):
     q += "\n" + order
 
   print(" ".join(q.split("\n")))
+
+
+  # turn tuples into biblib.bib.Entry objects
   ents = []
-  #cur = engine.execute(q % "E.type <> 'inproceedings'")
-  cur = engine.execute(q % "1=1")
+  cur = engine.execute(q)
   keys = cur.keys()
   list(map(keys.remove, ['type', 'key']))
   for row in cur:
@@ -150,9 +161,13 @@ def print_entries(printout, out, sort):
     ent.key = row['key']
     ents.append(ent)
 
+
+  # print to standard out
   if printout:
     for ent in ents:
       print(ent.to_bib())
+
+  # log to file
   if out:
     with open(out, 'w') as f:
       for ent in ents:
@@ -185,6 +200,14 @@ def save_entries(entries):
 
 
 
+############################################
+#
+#  Server Code
+#
+############################################
+
+
+
 @app.before_request
 def before_request():
   try:
@@ -201,10 +224,6 @@ def teardown_request(exception):
   except Exception as e:
     print(e)
     pass
-
-
-    
-
 
 @app.route('/', methods=["POST", "GET"])
 def index():
@@ -265,7 +284,6 @@ def run_server(HOST='localhost', PORT=8000, threaded=False, debug=True):
 
 
 if __name__ == "__main__":
-  import click
 
   @click.command()
   @click.option('--bibname', default=None)

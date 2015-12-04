@@ -96,7 +96,7 @@ Add entries
 
         ./bibcleaner --bibname <path to bib file>
 
-Run server
+Run server (click help in the upper right for instructions)
 
         ./bibcleaner --server
         # go to localhost:8000
@@ -104,5 +104,9 @@ Run server
 After normalizing the book titles
 
        ./bibcleaner --out <path to output bibtex file> 
+
+Or sorted
+
+      ./bibcleaner --out <path> --sort booktitle
 
 Now you're under the page limit!
