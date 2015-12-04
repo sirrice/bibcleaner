@@ -34,7 +34,7 @@ There are also multiple entry types, each with their own format (I realize there
 * journal
 * article
 
-And booktitles/journals have pretty much no standard.  Consider the following versions of "SIGMOD":
+Booktitles/journals have pretty much no standard.  Consider the following versions of "SIGMOD":
 
         Proceedings of the 2000 ACM SIGMOD International Conference on Management of Data
         Proceedings of the 2006 ACM SIGMOD International Conference on Management of Data
@@ -54,7 +54,7 @@ And booktitles/journals have pretty much no standard.  Consider the following ve
         Proceedings of the 1997 ACM SIGMOD International Conference on Management of Data
         In Proceedings of ACM SIGMOD
 
-Why? WHY? 
+Why? WHY?   They are also excessively long and taking up my precious space.
 
 ## BibCleaner
 
