@@ -1,0 +1,55 @@
+<html>
+   <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    <title>ewuuu</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <script src="/static/jquery.js"></script>
+    <script src="/static/handlebars.js"></script>
+    <script src="/static/underscore.js"></script>
+  </head>
+<body>
+ 
+
+<script>
+
+  var save = function(oldname, newname, cb) {
+    if (newname == "") newname = oldname;
+    $.post(
+      "/set/", 
+      { oldbook: oldname, newbook: newname },
+      cb,
+      "json"
+    )
+  };
+</script>
+
+
+
+<ul>
+{% for book in books %}
+<li id="entry-{{loop.index}}">
+  <div id="oldname-{{loop.index}}">{{book}}</div>
+  <form id="form-{{loop.index}}">
+    <input id="newname-{{loop.index}}"/>
+  </form>
+</li>
+<script>
+  $("#form-{{loop.index}}").submit(function() {
+    var oldname = $("#oldname-{{loop.index}}").html();
+    var newname = $("#newname-{{loop.index}}").val();
+    save(oldname, newname, function(data) {
+      console.log(data);
+      if (data && data.status != "ERR") {
+        $("#entry-{{loop.index}}").fadeOut();
+      }
+    });
+    return false;
+  });
+</script>
+{% endfor %}
+</ul>
+
+</body>
+
+</html>

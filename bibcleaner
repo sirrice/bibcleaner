@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+
+import biblib.bib
+import argparse
+import sys
+import flask
+import os
+import re
+import time
+import json
+import pdb
+import random
+import traceback
+
+import sqlalchemy
+from sqlalchemy import *
+from sqlalchemy.pool import NullPool
+from flask import Flask, request, render_template, g, redirect, Response
+
+tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+app = Flask(__name__, template_folder=tmpl_dir)
+
+
+SETUPQs = ["""CREATE TABLE if not exists mapping (
+  id serial,
+  oldbook text,
+  newbook text
+);""",
+"""CREATE TABLE if not exists entries (
+  id serial,
+  type text NOT NULL, -- book, misc, or inproceedings
+  key text UNIQUE NOT NULL,  -- wu2015
+  title text NOT NULL,
+  year text,
+  booktitle text, -- old book titel
+  author text,
+  howpublished text,
+  publisher text,
+  url text
+)
+"""
+]
+
+DATABASEURI = "sqlite:///test.db"
+
+engine = create_engine(DATABASEURI)
+for q in SETUPQs:
+  engine.execute(q)
+
+
+
+@app.before_request
+def before_request():
+  try:
+    g.conn = engine.connect()
+  except:
+    traceback.print_exc()
+    g.conn = None
+
+@app.teardown_request
+def teardown_request(exception):
+  try:
+    if hasattr(g, 'conn'):
+      g.conn.close()
+  except Exception as e:
+    print(e)
+    pass
+
+
+    
+def load_bibfile(bibfile, min_crossrefs=None):
+    try:
+        # Load databases
+        db = biblib.bib.Parser().parse(bibfile, log_fp=sys.stderr).get_entries()
+
+        # Optionally resolve cross-references
+        if min_crossrefs is not None:
+            db = biblib.bib.resolve_crossrefs(
+                db, min_crossrefs=min_crossrefs)
+    except biblib.messages.InputError:
+        sys.exit(1)
+
+
+    ents = []
+    # Pretty-print entries
+    for ent in db.values():
+        if not ent.key: continue
+        if ent.typ == 'inproceedings':
+          keys = ['author', 'title', 'booktitle', 'year', 'url']
+        elif ent.typ in ('article', 'journal'):
+          keys = ['author', 'title', 'journal', 'year', 'url']
+        else:
+          continue
+
+        vals = [" ".join(ent.get(key, '').split("\n")) for key in keys]
+        fields = dict(filter(lambda p: p[1], zip(keys, vals)))
+        if 'journal' in keys:
+          fields['booktitle'] = fields['journal']
+          del fields['journal']
+
+        newent = biblib.bib.Entry(fields.items())
+        newent.typ = 'inproceedings'
+        newent.key = ent.key
+        ents.append(newent)
+
+    #for newent in ents:
+    #print(newent.to_bib())
+    #print()
+
+    return ents
+
+def print_entries(printout, out):
+  q = """
+  SELECT type, key, title, year, newbook as booktitle, author, howpublished, publisher, url
+  FROM entries as E,
+      (SELECT booktitle as oldbook, booktitle as newbook 
+        FROM (SELECT distinct booktitle FROM entries) as foo 
+        WHERE booktitle NOT IN (SELECT oldbook FROM mapping)
+        UNION 
+        select oldbook, newbook from mapping) as M
+  WHERE E.booktitle = M.oldbook AND  %s
+  """
+  print(" ".join(q.split("\n")))
+  ents = []
+  #cur = engine.execute(q % "E.type <> 'inproceedings'")
+  cur = engine.execute(q % "1=1")
+  keys = cur.keys()
+  list(map(keys.remove, ['type', 'key']))
+  for row in cur:
+    d = dict([(key, str(row[key])) for key in keys if row[key]])
+    ent = biblib.bib.Entry(d.items())
+    ent.typ = row['type']
+    ent.key = row['key']
+    ents.append(ent)
+
+
+  if printout:
+    for ent in ents:
+      print(ent.to_bib())
+  if out:
+    with open(out, 'w') as f:
+      for ent in ents:
+        f.write(ent.to_bib())
+        f.write('\n')
+
+
+
+
+
+def save_entries(entries):
+  for e in entries:
+    vals = list(map(e.get, e.keys()))
+    args = (
+        ", ".join(e.keys()),
+        ", ".join(["?"] * len(vals))
+    )
+    q = "INSERT INTO entries(key, type, %s) VALUES(?, ?, %s)" % args
+    try:
+      engine.execute(q, tuple([e.key, e.typ] + vals))
+    except sqlalchemy.exc.IntegrityError:
+      continue
+    except Exception as e:
+      import pdb; pdb.set_trace()
+      print(e)
+      exit(1)
+
+
+
+@app.route('/', methods=["POST", "GET"])
+def index():
+  print(len(entries))
+  cur = g.conn.execute("""
+    SELECT distinct booktitle FROM entries WHERE booktitle NOT IN (SELECT oldbook FROM mapping) ORDER BY booktitle;""")
+  books = [row[0] for row in cur]
+
+  context = dict(books = books)
+  return render_template("index.html", **context)
+
+
+@app.route('/set/', methods=['POST', 'GET'])
+def new_mapping():
+  try:
+    print(request.form)
+
+    old = request.form['oldbook']
+    new = request.form['newbook']
+    print((old, new))
+    try:
+      q = """INSERT INTO mapping(oldbook, newbook) VALUES(?, ?)"""
+      g.conn.execute(q, (old, new))
+    except Exception as e:
+      print(e)
+    finally:
+      cur = g.conn.execute("SELECT count(*) FROM mapping WHERE oldbook = ?", (old,))
+      if cur.fetchone()[0] >= 1:
+        return json.dumps(dict(status="OK"))
+      return json.dumps(dict(status="ERR"))
+  except Exception as ee:
+    print(ee)
+    return json.dumps(dict(status="ERR"))
+
+def run_server(HOST='localhost', PORT=8000, threaded=False, debug=True):
+  print("running on %s:%d" % (HOST, PORT))
+  app.run(host=HOST, port=PORT, debug=debug, threaded=threaded)
+
+
+
+if __name__ == "__main__":
+  import click
+
+  @click.command()
+  @click.option('--bibname', default=None)
+  @click.option('--min-crossrefs', type=int, 
+                help='minimum number of cross-referencing entries'
+                ' required to expand a crossref; if omitted, no'
+                ' expansion occurs', default=None)
+  @click.option('--server', is_flag=True, help='run webserver to deduplicate bibtex entries that have been loaded')
+  @click.option('--printout', is_flag=True, help='print normalized bibtex database to stdout')
+  @click.option('--out', help='filename to output normalized bibtex database', default=None)
+  def main(bibname, min_crossrefs, server, printout, out):
+    """
+    Simple script to parse a bibtex file, store in database, keep only useful attributes,
+    normalize all entries to @inproceedings, and runs a web gui to deduplicate booktitles.
+    """
+    if bibname:
+        with open(bibname) as bib:
+            entries = load_bibfile(bib, min_crossrefs)
+            save_entries(entries)
+    if server:
+      run_server()
+    if out or printout:
+      print_entries(printout, out)
+    if not bibname and not server and not out and not printout:
+      print("./bibcleaner --help")
+
+
+  main()
+
