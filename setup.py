@@ -8,6 +8,7 @@ setup(
     author='Eugene wu',
     author_email='ewu@cs.columbia.edu',
     packages=['bibcleaner'],
+    package_data={'':['templates/', 'static/']},
     scripts=['bin/bibcleaner'],
     keywords=['bibtex', 'tex', 'cleaning'],
     classifiers=[
