@@ -14,6 +14,7 @@ from collections import *
 import click
 import biblib.bib
 import sqlalchemy
+from util import *
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response, url_for
@@ -68,6 +69,15 @@ def upload():
   g.conn.execute(q % args)
   return redirect(url_for("index", fname=fname))
 
+@app.route("/files/") 
+@app.route("/files")
+def list_files():
+  q = "select rowid, name from files"
+  cur = g.conn.execute(q)
+  ds = [dict(id=row[0], fname=row[1]) for row in cur]
+  return render_template('list_files.html', files=ds)
+
+
 @app.route("/print/<fname>") 
 @app.route("/print/<fname>/") 
 def print_file(fname=""):
@@ -104,6 +114,7 @@ def print_file(fname=""):
 
 @app.route('/', methods=["POST", "GET"])
 @app.route('/<fname>', methods=["POST", "GET"])
+@app.route('/<fname>/', methods=["POST", "GET"])
 def index(fname=""):
   if fname.lower() in ('all', ''):
     cur = g.conn.execute("""
