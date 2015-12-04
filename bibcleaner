@@ -115,7 +115,7 @@ def load_bibfile(bibfile, min_crossrefs=None):
 
   return ents
 
-def print_entries(printout, out):
+def print_entries(printout, out, sort):
   """
   print entries to std, and optionally if out is not None, write to file
   """
@@ -129,6 +129,14 @@ def print_entries(printout, out):
         select oldbook, newbook from mapping) as M
   WHERE E.booktitle = M.oldbook AND  %s
   """
+
+  if sort:
+    if sort == 'booktitle':
+      order = "ORDER BY newbook"
+    else:
+      order = "ORDER BY %s" % sort
+    q += "\n" + order
+
   print(" ".join(q.split("\n")))
   ents = []
   #cur = engine.execute(q % "E.type <> 'inproceedings'")
@@ -270,7 +278,8 @@ if __name__ == "__main__":
   @click.option('--server', is_flag=True, help='run webserver to deduplicate bibtex entries that have been loaded')
   @click.option('--printout', is_flag=True, help='print normalized bibtex database to stdout')
   @click.option('--out', help='filename to output normalized bibtex database', default=None)
-  def main(bibname, min_crossrefs, cleanentries, cleanmappings, server, printout, out):
+  @click.option('--sort', type=click.Choice(['year', 'author', 'booktitle', 'key']), help='when printing or outputing cleaned bibtex, optional sort order')
+  def main(bibname, min_crossrefs, cleanentries, cleanmappings, server, printout, out, sort):
     """
     Simple script to parse a bibtex file, store in database, keep only useful attributes,
     normalize all entries to @inproceedings, and runs a web gui to deduplicate booktitles.
@@ -289,7 +298,7 @@ if __name__ == "__main__":
     if server:
       run_server()
     if out or printout:
-      print_entries(printout, out)
+      print_entries(printout, out, sort)
     if not cleanentries and not cleanmappings and not bibname and not server and not out and not printout:
       print("./bibcleaner --help")
 
