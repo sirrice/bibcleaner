@@ -10,8 +10,41 @@
   </head>
 <body>
  
+<style>
+  .book:hover {
+    cursor: pointer;
+  }
+  .book.selected {
+    background: #3A87E1;
+    color: white;
+  }
+  .oldbook {
+    border: 5px solid white;
+  }
+
+  .oldbook:hover {
+    text-decoration: line-through;
+    cursor: pointer;
+    color: grey;
+  }
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+</style>
 
 <script>
+  var nbooks = {{books|length}}
+  var lastClicked = null;
+  var shifted = false;
+  var curIdx = 1;
+
 
   var save = function(oldname, newname, cb) {
     if (newname == "") newname = oldname;
@@ -22,34 +55,162 @@
       "json"
     )
   };
+  var rm = function(id, cb) {
+    $.post( "/rm/", { id: id }, cb, "json")
+  };
+
+
 </script>
 
-
-
-<ul>
-{% for book in books %}
-<li id="entry-{{loop.index}}">
-  <div id="oldname-{{loop.index}}">{{book}}</div>
-  <form id="form-{{loop.index}}">
-    <input id="newname-{{loop.index}}"/>
-  </form>
-</li>
+<div id="help" style="display: none; position: absolute; height: 100%; top: 0px; right: 0px; width: 500px; margin-left: auto; margin-right: auto; background: white; border: 2px solid #ddd; padding: 1em; z-index: 0;">
+  help text
+</div>
+<div id="helpbtn" style="position:absolute;  top: 0px; right: 0px; padding: 10px; z-index: 1;">
+  help
+</div>
 <script>
-  $("#form-{{loop.index}}").submit(function() {
-    var oldname = $("#oldname-{{loop.index}}").html();
-    var newname = $("#newname-{{loop.index}}").val();
-    save(oldname, newname, function(data) {
-      console.log(data);
-      if (data && data.status != "ERR") {
-        $("#entry-{{loop.index}}").fadeOut();
-      }
-    });
-    return false;
-  });
+  $("#helpbtn").click(function() { $("#help").toggle(); });
 </script>
-{% endfor %}
-</ul>
+
+
+<div style="width:30%; min-width: 50px; float:left;">
+  <div id="mappings" style="height: 100%; overflow-y:scroll">
+    {% for gmap in gmapping %}
+      <div id="gmap-{{loop.index}}" class="mapping">
+        <div id="gmap-new-{{loop.index}}" class="newbook">{{gmap.newbook}}</div>
+        {% for d in gmap.oldbooks %}
+          <div id="gmap-old-{{d.id}}" class="oldbook">{{d.oldbook}}</div>
+
+          <script>
+            $("#gmap-old-{{d.id}}").click(function() {
+              rm({{d.id}}, function() {
+                $("#gmap-old-{{d.id}}").fadeOut();
+              })
+            });
+          </script>
+
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+<div style="width:5%; float:left;">
+</div>
+<div style="width:65%; float:left;">
+  <div id="books"  style="height: 80%; overflow-y: scroll;">
+
+    <ul>
+    {% for book in books %}
+    <li id="entry-{{loop.index}}">
+    <span style="width: 3em">{{book.count}}</span>
+    <span class="book" data-idx={{loop.index}} id="oldname-{{loop.index}}">{{book.name}}</span>
+    </li>
+    {% endfor %}
+    </ul>
+
+
+  </div>
+  <div style="height: 20%;">
+    <p>
+    <form id="cmdform">
+      <input id="cmd"  autofocus style="position: absolute; bottom: 0px; font-size: 20pt; width: 100%; border: 1px solid gray;"/>
+    </form>
+    <p>
+  </div>
+
+</div>
 
 </body>
 
 </html>
+
+
+<script>
+  var next_entry = function(step) {
+    if ((step > 0 && curIdx <= nbooks-step) || 
+        (step < 0 && curIdx > 0-step)) {
+      curIdx += step;
+      if (select_entry(curIdx) === false) {
+        if (step != 0) 
+          next_entry(step / Math.abs(step));
+      }
+    }
+  }
+  var select_entry = function(idx) {
+    if (idx > nbooks || idx <= 0) return;
+    if ($("#oldname-"+idx).height() == 0) {
+      return false;
+    }
+    $(".selected").removeClass("selected");
+    $("#oldname-"+idx).toggleClass("selected");
+    $("#books").get()[0].scrollTop = 0;
+    var pos = $("#oldname-"+idx).position().top - 20;
+    var fix = pos;
+    if (pos > $("#books").height()/2) {
+      fix = $("#books").height()/2;
+    }
+    console.log(pos + ", " + fix)
+    $("#books").get()[0].scrollTop = _.max([pos - fix, 0]);
+    return true;
+  }
+
+
+  var submitIt = function() {
+    var oldname = $("#oldname-" + curIdx).html()
+    var newname = $("#cmd").val()
+    var entry = $("#entry-"+curIdx);
+    next_entry(1);
+    $("#cmd").select();
+
+    save(oldname, newname, function(data) {
+      if (data && data.status != "ERR") {
+        entry.fadeOut();
+      }
+    });
+    return false;
+
+  }
+
+
+  var shortcuts = function(e){
+    console.log(e.which);
+    if (e.which == 40) {
+      // down
+      next_entry(1);
+      $("#cmd").select();
+    } 
+    else if (e.which == 38) {
+      // up
+      next_entry(-1);
+      $("#cmd").select();
+    }
+  }
+  var addClick = function(idx) {
+    $("#oldname-"+idx).click(function(el) {
+      curIdx = +$(this).data("idx")
+      console.log("clicked: " + curIdx)
+      select_entry(curIdx);
+      $("#cmd").focus().select()
+    });
+  }
+  _.times(nbooks+1, addClick);
+
+
+
+
+  $(function() {
+    $(document).keyup(function(e){shifted = e.shiftKey} );
+    $(document).keydown(function(e){shifted = e.shiftKey} );
+    $(document).keydown(shortcuts);
+    $("#cmd").get()[0].setAttribute( "autocomplete", "off" )
+    $("#cmdform").submit(submitIt);
+
+    curIdx = 1;
+    select_entry(curIdx);
+  });
+
+
+
+
+</script>
