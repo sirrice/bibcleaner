@@ -11,8 +11,12 @@
 <body>
  
 <style>
+  .book {
+    border-bottom: 1px solid white;
+  }
   .book:hover {
     cursor: pointer;
+    border-bottom: 1px dotted grey;
   }
   .book.selected {
     background: #3A87E1;
@@ -64,13 +68,51 @@
 
 
 
+<div id="help" style="display: none; position: absolute; height: 90%; overflow-y: scroll; top: 0px; right: 0px; width: 500px; margin-left: auto; margin-right: auto; background: white; border: 2px solid #ddd; padding: 1em; z-index: 1;">
+  <h2>Cleaning Booktitles</h2>
+  <p>
+  The main pane in the middle of the page lists all of the distinct booktitles in the corpus, along
+  with the number of entries with that booktitle.
+  </p>
+  <p>
+  The text input at the bottom of the page is where you can write the normalized booktitle for 
+  the currently selected booktitle (blue background).  
+  We try very hard to keep the text input focused.
+  </p>
+  <h3>Editing Details</h3>
+  <p>
+  <ul>
+    <li>You can press up and down on the keyboard at anytime to move the selected booktitle. 
+    <li>You can also click on an entry to select it. 
+        We will return focus to the text input and select all of the text so you can start editing immediately.
+    <li>Press enter to add a new mapping between the selected book title and the text in the input box.
+        If the input box is empty, it means the selected book title is correct and we add an identity mapping
+    <li>Adding a mapping removes the selected booktitle from the list and moves the selection to the next title.
+    <li>After you add a new mapping, we select all of the the text in the input so you can change it quickly.
+  </ul>
 
-<div id="help" style="display: none; position: absolute; height: 100%; top: 0px; right: 0px; width: 500px; margin-left: auto; margin-right: auto; background: white; border: 2px solid #ddd; padding: 1em; z-index: 0;">
-  help text
+  </p>
+
+  <h2>Listing Mappings</h2>
+  <p>
+  The left panel lists the mappings grouped by the normalized booktitle.
+  The blue text is the normalized booktitle, and the red text are the originals.
+  Click on red text to remove that mapping (if you made an error).
+  </p>
+  <p>
+  New mappings are added to the top of the listings, that way you can immediately see what you just did
+  </p>
 </div>
-<div id="helpbtn" style="position:absolute;  top: 0px; right: 0px; padding: 10px; z-index: 1;">
-  help
+<div id="helpbtn" style="position:absolute;  top: 0px; right: 0px; padding: 10px; z-index: 2; background: white;">
+  <a href="#">click for help!</a>
 </div>
+<div style="position:absolute;  top: 2em; right: 0px; padding: 10px; z-index: 0;">
+  <p><a href="/upload">Upload New Bibtex</a>
+  {% if fname %}
+  <p><a href="/print/{{fname}}">Export bibtex</a>
+  {% endif %}
+</div>
+
 <script>
   $("#helpbtn").click(function() { $("#help").toggle(); });
 </script>
@@ -117,7 +159,7 @@
   <div style="height: 20%;">
     <p>
     <form id="cmdform">
-      <input id="cmd"  autofocus style="position: absolute; bottom: 0px; font-size: 20pt; width: 100%; border: 1px solid gray;"/>
+      <input id="cmd"  autofocus style="position: absolute; bottom: 0px; font-size: 25pt; width: 600px; border: 1px solid gray;"/>
     </form>
     <p>
   </div>
