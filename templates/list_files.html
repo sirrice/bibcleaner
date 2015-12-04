@@ -1,0 +1,9 @@
+<html>
+  <body>
+    <ul>
+      {% for f in files %}
+      <li><a href="/{{f.fname}}/">{{f.fname}}</a>
+      {% endfor %}
+    </ul>
+  </body>
+</html>
