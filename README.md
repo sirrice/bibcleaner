@@ -88,13 +88,17 @@ We recommend usin a virtualenv environment for all of the following
 
         pip3 install flask sqlalchemy click 
 
-Run it
+Help: options can be combined
 
         ./bibcleaner --help
 
 Add entries
 
         ./bibcleaner --bibname <path to bib file>
+
+Clean up an existing bibtex file and print to stdout
+
+        ./bibcleaner --bibname <path> --printout
 
 Run server (click help in the upper right for instructions)
 
