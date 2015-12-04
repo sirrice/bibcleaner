@@ -76,6 +76,7 @@ Requires
 * Python3
 * [biblib](https://github.com/aclements/biblib)
 * [flask](http://flask.pocoo.org/)
+* [click](click.pocoo.org)
 * sqlalchemy
 
 
@@ -85,8 +86,7 @@ We recommend usin a virtualenv environment for all of the following
         cd biblib
         python3 setup.py install
 
-        pip install flask 
-        pip install sqlalchemy
+        pip3 install flask sqlalchemy click 
 
 Run it
 
