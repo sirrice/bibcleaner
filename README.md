@@ -68,6 +68,9 @@ bibcleaner is a utility  that performs the following
 * once you've cleaned enough booktitles, export a clean, succinct version of your bibtex file,
   optionally sorted by year, author (lexigraphically), entry key, or booktitle.
 
+
+# Installation and Usage
+
 Requires
 
 * Python3
@@ -75,13 +78,15 @@ Requires
 * [flask](http://flask.pocoo.org/)
 * sqlalchemy
 
+
+We recommend usin a virtualenv environment for all of the following
+
         git clone https://github.com/aclements/biblib.git
         cd biblib
         python3 setup.py install
 
         pip install flask 
         pip install sqlalchemy
-
 
 Run it
 
