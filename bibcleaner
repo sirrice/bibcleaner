@@ -390,10 +390,11 @@ if __name__ == "__main__":
   @click.option('--cleanentries', is_flag=True, help='remove bibtex entries from database')
   @click.option('--cleanmappings', is_flag=True, help='remove booktitle mappings from database')
   @click.option('--server', is_flag=True, help='run webserver to deduplicate bibtex entries that have been loaded')
+  @click.option('--port', type=int, default=8000)
   @click.option('--printout', is_flag=True, help='print normalized bibtex database to stdout')
   @click.option('--out', help='filename to output normalized bibtex database', default=None)
   @click.option('--sort', type=click.Choice(['year', 'author', 'booktitle', 'key']), help='when printing or outputing cleaned bibtex, optional sort order')
-  def main(bibname, min_crossrefs, cleanentries, cleanmappings, server, printout, out, sort):
+  def main(bibname, min_crossrefs, cleanentries, cleanmappings, server, port, printout, out, sort):
     """
     Simple script to parse a bibtex file, store in database, keep only useful attributes,
     normalize all entries to @inproceedings, and runs a web gui to deduplicate booktitles.
@@ -410,7 +411,7 @@ if __name__ == "__main__":
             entries = load_bibfile(bib, min_crossrefs)
             save_entries(entries)
     if server:
-      run_server()
+      run_server(HOST='0.0.0.0', PORT=port)
     if out or printout:
       print_entries(printout, out, sort)
     if not cleanentries and not cleanmappings and not bibname and not server and not out and not printout:
