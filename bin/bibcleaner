@@ -18,8 +18,8 @@ import biblib.bib
 import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from server import run_server
-from util import *
+from bibcleaner.server import run_server
+from bibcleaner.util import *
 
 
 
@@ -150,6 +150,8 @@ if __name__ == "__main__":
     """
     Simple script to parse a bibtex file, store in database, keep only useful attributes,
     normalize all entries to @inproceedings, and runs a web gui to deduplicate booktitles.
+
+    Note: bibcleaner sets up the database in the directory where bibcleaner is run
     """
     if cleanentries:
       if input("Are you sure you want to clear the entries?\nType Y or yes to confirm: ").lower() in ['y', 'yes']:

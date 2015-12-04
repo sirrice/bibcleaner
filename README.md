@@ -71,7 +71,7 @@ bibcleaner is a utility  that performs the following
 
 # Installation and Usage
 
-Requires
+This library requires:
 
 * Python3
 * [biblib](https://github.com/sirrice/biblib)
@@ -80,13 +80,10 @@ Requires
 * sqlalchemy
 
 
-We recommend usin a virtualenv environment for all of the following
+We recommend usin a virtualenv environment for installation
 
-        git clone https://github.com/sirrice/biblib.git
-        cd biblib
         python3 setup.py install
 
-        pip3 install flask sqlalchemy click 
 
 Help: options can be combined
 
