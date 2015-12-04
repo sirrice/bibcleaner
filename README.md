@@ -74,7 +74,7 @@ bibcleaner is a utility  that performs the following
 Requires
 
 * Python3
-* [biblib](https://github.com/aclements/biblib)
+* [biblib](https://github.com/sirrice/biblib)
 * [flask](http://flask.pocoo.org/)
 * [click](click.pocoo.org)
 * sqlalchemy
@@ -82,7 +82,7 @@ Requires
 
 We recommend usin a virtualenv environment for all of the following
 
-        git clone https://github.com/aclements/biblib.git
+        git clone https://github.com/sirrice/biblib.git
         cd biblib
         python3 setup.py install
 
@@ -114,3 +114,9 @@ Or sorted
       ./bibcleaner --out <path> --sort booktitle
 
 Now you're under the page limit!
+
+
+
+# Kudos
+
+We're using aclemnt's [biblib](https://github.com/aclements/biblib) with a tiny hack to ignore parsing errors.
