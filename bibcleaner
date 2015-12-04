@@ -239,14 +239,13 @@ def new_mapping():
     print((old, new))
     try:
       q = """INSERT INTO mapping(oldbook, newbook) VALUES(?, ?)"""
-      g.conn.execute(q, (old, new))
+      cur = g.conn.execute(q, (old, new))
+      rowid = cur.lastrowid
+      if rowid is not None:
+        return json.dumps(dict(status="OK", id=rowid))
     except Exception as e:
+      return json.dumps(dict(status="ERR", msg=str(e)))
       print(e)
-    finally:
-      cur = g.conn.execute("SELECT count(*) FROM mapping WHERE oldbook = ?", (old,))
-      if cur.fetchone()[0] >= 1:
-        return json.dumps(dict(status="OK"))
-      return json.dumps(dict(status="ERR"))
   except Exception as ee:
     print(ee)
     return json.dumps(dict(status="ERR"))

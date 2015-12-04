@@ -62,6 +62,9 @@
 
 </script>
 
+
+
+
 <div id="help" style="display: none; position: absolute; height: 100%; top: 0px; right: 0px; width: 500px; margin-left: auto; margin-right: auto; background: white; border: 2px solid #ddd; padding: 1em; z-index: 0;">
   help text
 </div>
@@ -126,6 +129,19 @@
 </html>
 
 
+
+{%raw%}
+<script id="map-template" type="text/x-handlebars-template">
+  <div  class="mapping">
+    <div class="newbook">{{newbook}}</div>
+    <div id="gmap-old-{{id}}" class="oldbook">{{oldbook}}</div>
+  </div>
+</script>
+{%endraw%}
+
+
+
+
 <script>
   var next_entry = function(step) {
     if ((step > 0 && curIdx <= nbooks-step) || 
@@ -159,6 +175,7 @@
   var submitIt = function() {
     var oldname = $("#oldname-" + curIdx).html()
     var newname = $("#cmd").val()
+    if (newname == "") newname = oldname;
     var entry = $("#entry-"+curIdx);
     next_entry(1);
     $("#cmd").select();
@@ -166,6 +183,8 @@
     save(oldname, newname, function(data) {
       if (data && data.status != "ERR") {
         entry.fadeOut();
+        console.log(data);
+        add_mapping(oldname, newname, data.id);
       }
     });
     return false;
@@ -196,6 +215,18 @@
   }
   _.times(nbooks+1, addClick);
 
+
+  var add_mapping = function(oldname, newname, id) {
+    var template = Handlebars.compile($("#map-template").html());
+    var html = template({ oldbook: oldname, newbook: newname, id: id});
+    var el = $(html)
+    $("#mappings").prepend(el);
+    el.select(".oldbook").click(function() {
+      rm(id, function() {
+        el.fadeOut();
+      })
+    });
+  };
 
 
 
