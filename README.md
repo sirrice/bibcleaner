@@ -82,8 +82,25 @@ This library requires:
 
 We recommend usin a virtualenv environment for installation
 
-        python3 setup.py install
 
+        virtualenv new --python=<path to python3> <venv name>
+
+Install me!
+
+        python setup.py install
+
+        # or
+
+        pip install bibcleaner
+
+If biblib fails to instell, download it and install manually
+
+        git clone https://github.com/sirrice/biblib
+        cd biblib
+        python setup.py install
+
+
+## Running
 
 Help: options can be combined
 

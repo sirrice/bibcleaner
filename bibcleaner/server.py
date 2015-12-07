@@ -21,6 +21,7 @@ from flask import Flask, request, render_template, g, redirect, Response, url_fo
 from .util import *
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+print(tmpl_dir)
 app = Flask(__name__, template_folder=tmpl_dir)
 
 DATABASEURI = "sqlite:///bibcleaner.db"
