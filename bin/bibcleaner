@@ -23,118 +23,10 @@ from bibcleaner.util import *
 
 
 
-
-
-
-def load_bibfile(bibfile, min_crossrefs=None):
-  """
-  Given bib file object, parse it and return the list of Entry objects
-  Normalizes all inproceedings, article, and journal entry types to inproceedings type.
-  """
-  try:
-    # Load databases
-    db = biblib.bib.Parser(paranoid=False).parse(bibfile, log_fp=sys.stderr).get_entries()
-
-    # Optionally resolve cross-references
-    if min_crossrefs is not None:
-      db = biblib.bib.resolve_crossrefs(
-        db, min_crossrefs=min_crossrefs)
-  except biblib.messages.InputError:
-    #sys.exit(1)
-    pass
-
-
-  ents = []
-  for ent in db.values():
-    if not ent.key: continue
-    if ent.typ in entry_types:
-      keys = entry_keys
-    else:
-      ents.append(ent)
-      continue
-
-    vals = [" ".join(ent.get(key, '').split("\n")) for key in keys]
-    # only keep keys that have non-null values
-    fields = dict(filter(lambda p: p[1], zip(keys, vals)))
-    fields = fix_synonyms(fields, synonyms)
-
-    # change paper entries into @inproceedings
-    newent = biblib.bib.Entry(fields.items())
-    newent.typ = 'inproceedings'
-    newent.key = ent.key
-    ents.append(newent)
-
-  return ents
-
-
-def print_entries(printout, out, sort):
-  """
-  print entries to stdout, and optionally, if out is not None, write to file
-  """
-
-  q = """
-  SELECT type, key, title, year, newbook as booktitle, author, howpublished, publisher, url
-  FROM entries as E,
-      (SELECT booktitle as oldbook, booktitle as newbook 
-        FROM (SELECT distinct booktitle FROM entries) as foo 
-        WHERE booktitle NOT IN (SELECT oldbook FROM mapping)
-        UNION 
-        select oldbook, newbook from mapping) as M
-  WHERE E.booktitle = M.oldbook
-  """
-
-  if sort:
-    if sort == 'booktitle':
-      order = "ORDER BY newbook"
-    else:
-      order = "ORDER BY %s" % sort
-    q += "\n" + order
-
-  ents = sql_to_entries(q)
-
-  # print to standard out
-  if printout:
-    for ent in ents:
-      print(ent.to_bib())
-
-  # log to file
-  if out:
-    with open(out, 'w') as f:
-      for ent in ents:
-        f.write(ent.to_bib())
-        f.write('\n')
-
-def save_entries(entries):
-  """
-  insert entries into database
-  """
-  for e in entries:
-    keys = set(e.keys()).intersection(allowed_keys)
-    vals = list(map(e.get, keys))
-    args = (
-        ", ".join(keys),
-        ", ".join(["?"] * len(vals))
-    )
-    q = "INSERT INTO entries(key, type, %s) VALUES(?, ?, %s)" % args
-    try:
-      engine.execute(q, tuple([e.key, e.typ] + vals))
-    except sqlalchemy.exc.IntegrityError:
-      continue
-    except Exception as err:
-      import pdb; pdb.set_trace()
-      print(e)
-      exit(1)
-
-
-
-
-
-
-
 if __name__ == "__main__":
 
   @click.command()
-  @click.option('--bibname', default=None)
+  @click.option('--bibpath', default=None, help='Path to bibtex file that you want to load and clean')
   @click.option('--min-crossrefs', type=int, 
                 help='minimum number of cross-referencing entries'
                 ' required to expand a crossref; if omitted, no'
@@ -145,30 +37,41 @@ if __name__ == "__main__":
   @click.option('--port', type=int, default=8000)
   @click.option('--printout', is_flag=True, help='print normalized bibtex database to stdout')
   @click.option('--out', help='filename to output normalized bibtex database', default=None)
-  @click.option('--sort', type=click.Choice(['year', 'author', 'booktitle', 'key']), help='when printing or outputing cleaned bibtex, optional sort order')
-  def main(bibname, min_crossrefs, cleanentries, cleanmappings, server, port, printout, out, sort):
+  @click.option('--sort', type=click.Choice(['year', 'author', 'booktitle', 'key']), 
+                help='when printing or outputing cleaned bibtex, optional sort order')
+  def main(bibpath, min_crossrefs, cleanentries, cleanmappings, server, port, printout, out, sort):
     """
     Simple script to parse a bibtex file, store in database, keep only useful attributes,
     normalize all entries to @inproceedings, and runs a web gui to deduplicate booktitles.
 
-    Note: bibcleaner sets up the database in the directory where bibcleaner is run
+    To run quickly, type:
+
+        bibcleaner --server --port 8888
+
+    and go to http://localhost:8888 
+
+    Note: bibcleaner sets up the db in the directory where bibcleaner is run
     """
     if cleanentries:
-      if input("Are you sure you want to clear the entries?\nType Y or yes to confirm: ").lower() in ['y', 'yes']:
+      if input("Are you sure you want to remove all bibtex entries in the DB?\nType y or yes to confirm: ").lower() in ['y', 'yes']:
         engine.execute("delete from entries")
+      else:
+        print("aborted")
     if cleanmappings:
-      if input("Are you sure you want to clear the mappings?\nType Y or yes to confirm: ").lower() in ['y', 'yes']:
+      if input("Are you sure you want to remove all booktitle mappings in the DB?\nType y or yes to confirm: ").lower() in ['y', 'yes']:
         engine.execute("delete from mapping")
+      else:
+        print("aborted")
 
-    if bibname:
-        with open(bibname) as bib:
+    if bibpath:
+        with open(bibpath) as bib:
             entries = load_bibfile(bib, min_crossrefs)
             save_entries(entries)
     if server:
       run_server(HOST='0.0.0.0', PORT=port)
     if out or printout:
       print_entries(printout, out, sort)
-    if not cleanentries and not cleanmappings and not bibname and not server and not out and not printout:
+    if not cleanentries and not cleanmappings and not bibpath and not server and not out and not printout:
       print("./bibcleaner --help")
 
 

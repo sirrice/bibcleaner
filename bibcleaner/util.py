@@ -113,3 +113,107 @@ def sql_to_entries(q, args=()):
   return ents
 
 
+
+
+
+
+def load_bibfile(bibfile, min_crossrefs=None):
+  """
+  Given bib file object, parse it and return the list of Entry objects
+  Normalizes all inproceedings, article, and journal entry types to inproceedings type.
+  """
+  try:
+    # Load databases
+    db = biblib.bib.Parser(paranoid=False).parse(bibfile, log_fp=sys.stderr).get_entries()
+
+    # Optionally resolve cross-references
+    if min_crossrefs is not None:
+      db = biblib.bib.resolve_crossrefs(
+        db, min_crossrefs=min_crossrefs)
+  except biblib.messages.InputError:
+    #sys.exit(1)
+    pass
+
+
+  ents = []
+  for ent in db.values():
+    if not ent.key: continue
+    if ent.typ in entry_types:
+      keys = entry_keys
+    else:
+      ents.append(ent)
+      continue
+
+    vals = [" ".join(ent.get(key, '').split("\n")) for key in keys]
+    # only keep keys that have non-null values
+    fields = dict(filter(lambda p: p[1], zip(keys, vals)))
+    fields = fix_synonyms(fields, synonyms)
+
+    # change paper entries into @inproceedings
+    newent = biblib.bib.Entry(fields.items())
+    newent.typ = 'inproceedings'
+    newent.key = ent.key
+    ents.append(newent)
+
+  return ents
+
+
+def print_entries(printout, out, sort):
+  """
+  print entries to stdout, and optionally, if out is not None, write to file
+  """
+
+  q = """
+  SELECT type, key, title, year, newbook as booktitle, author, howpublished, publisher, url
+  FROM entries as E,
+      (SELECT booktitle as oldbook, booktitle as newbook 
+        FROM (SELECT distinct booktitle FROM entries) as foo 
+        WHERE booktitle NOT IN (SELECT oldbook FROM mapping)
+        UNION 
+        select oldbook, newbook from mapping) as M
+  WHERE E.booktitle = M.oldbook
+  """
+
+  if sort:
+    if sort == 'booktitle':
+      order = "ORDER BY newbook"
+    else:
+      order = "ORDER BY %s" % sort
+    q += "\n" + order
+
+  ents = sql_to_entries(q)
+
+  # print to standard out
+  if printout:
+    for ent in ents:
+      print(ent.to_bib())
+
+  # log to file
+  if out:
+    with open(out, 'w') as f:
+      for ent in ents:
+        f.write(ent.to_bib())
+        f.write('\n')
+
+def save_entries(entries):
+  """
+  insert entries into database
+  """
+  for e in entries:
+    keys = set(e.keys()).intersection(allowed_keys)
+    vals = list(map(e.get, keys))
+    args = (
+        ", ".join(keys),
+        ", ".join(["?"] * len(vals))
+    )
+    q = "INSERT INTO entries(key, type, %s) VALUES(?, ?, %s)" % args
+    try:
+      engine.execute(q, tuple([e.key, e.typ] + vals))
+    except sqlalchemy.exc.IntegrityError:
+      continue
+    except Exception as err:
+      print(e)
+
+
+
+
