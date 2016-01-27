@@ -66,6 +66,18 @@ bibcleaner is a utility  that performs the following
   optionally sorted by year, author (lexigraphically), entry key, or booktitle.
 
 
+# Interface
+
+![Screenshot](https://github.com/sirrice/bibcleaner/blob/master/screenshot.png)
+
+The above is a screenshot of the `bibcleaner` interface.  The middle panel shows the list of unique booktitles in your bibtex file.  
+Use the input box to type in a new value for the highlighted booktitle, or an empty string to accept the existing value.
+Up and down arrow keys work.
+
+
+The left panel shows the mappings you have already created.  The blue text is the short normalized booktitle, and the red text are the original variations that map to the blue text.
+You can upload bibtex files, list the files you've uploaded, and export what you have.
+
 # Installation and Usage
 
 This library requires:
