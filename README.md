@@ -68,7 +68,7 @@ bibcleaner is a utility  that performs the following
 
 # Interface
 
-![Screenshot](https://github.com/sirrice/bibcleaner/blob/master/screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/sirrice/bibcleaner/master/screenshot.png)
 
 The above is a screenshot of the `bibcleaner` interface.  The middle panel shows the list of unique booktitles in your bibtex file.  
 Use the input box to type in a new value for the highlighted booktitle, or an empty string to accept the existing value.
