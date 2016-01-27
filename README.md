@@ -72,10 +72,11 @@ bibcleaner is a utility  that performs the following
 
 The above is a screenshot of the `bibcleaner` interface.  The middle panel shows the list of unique booktitles in your bibtex file.  
 Use the input box to type in a new value for the highlighted booktitle, or an empty string to accept the existing value.
-Up and down arrow keys work.
-
+Up and down arrow keys work and we try really hard to make the interface keyboard only, and efficient.
 
 The left panel shows the mappings you have already created.  The blue text is the short normalized booktitle, and the red text are the original variations that map to the blue text.
+Click on a red text to remove that mapping.
+
 You can upload bibtex files, list the files you've uploaded, and export what you have.
 
 # Installation and Usage
