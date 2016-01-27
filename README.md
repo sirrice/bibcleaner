@@ -28,7 +28,7 @@ to be in my paper!  Consider this example:
 
 90% OF THESE ATTRIBUTES ARE TAKING UP PRECIOUS SPACE!  GO AWAY
 
-There are also multiple entry types, each with their own format (I realize there are subtle differences):
+There are also multiple entry types, each with their own format (I realize there are subtle differences that I choose to ignore):
 
 * inproceedings
 * journal
@@ -37,9 +37,6 @@ There are also multiple entry types, each with their own format (I realize there
 Booktitles/journals have pretty much no standard.  Consider the following versions of "SIGMOD":
 
         Proceedings of the 2000 ACM SIGMOD International Conference on Management of Data
-        Proceedings of the 2006 ACM SIGMOD International Conference on Management of Data
-        Proceedings of the 2008 ACM SIGMOD International Conference on Management of Data
-        Proceedings of the 2009 ACM SIGMOD International Conference on Management of Data
         Proceedings of the 2010 ACM SIGMOD International Conference on Management of Data
         Proceedings of the 2010 ACM SIGMOD International Conference on Management of data
         Proceedings of the 2012 ACM SIGMOD International Conference on Management of Data
@@ -73,7 +70,7 @@ bibcleaner is a utility  that performs the following
 
 This library requires:
 
-* Python3
+* **Python3**
 * [biblib](https://github.com/sirrice/biblib)
 * [flask](http://flask.pocoo.org/)
 * [click](click.pocoo.org)
@@ -85,26 +82,33 @@ We recommend usin a virtualenv environment for installation
 
         virtualenv new --python=<path to python3> <venv name>
 
-Install me!
+We use a custom version of `biblib`, so please download and install it manually
 
-        python setup.py install
-
-        # or
-
-        pip install bibcleaner
-
-If biblib fails to instell, download it and install manually
-
-        git clone https://github.com/sirrice/biblib
+        git clone https://github.com/sirrice/biblib.git
         cd biblib
         python setup.py install
 
+Install me!
+
+        pip install bibcleaner
+
+        # OR
+
+        git clone https://github.com/sirrice/bibcleaner.git
+        cd bibcleaner
+        python setup.py install
 
 ## Running
 
 Help: options can be combined
 
         ./bibcleaner --help
+
+The easiest is to just run the server and use the gui (click help in the upper right for instructions)
+
+        ./bibcleaner --server --port 8000
+        # go to localhost:8000
+
 
 Add entries
 
@@ -114,23 +118,17 @@ Clean up an existing bibtex file and print to stdout
 
         ./bibcleaner --bibname <path> --printout
 
-Run server (click help in the upper right for instructions)
-
-        ./bibcleaner --server
-        # go to localhost:8000
-
-After normalizing the book titles
+After normalizing the book titles, output the cleaned entries into a new file
 
        ./bibcleaner --out <path to output bibtex file> 
 
-Or sorted
+Or output them sorted by booktitle, author name or another attribute
 
       ./bibcleaner --out <path> --sort booktitle
 
 Now you're under the page limit!
 
 
-
 # Kudos
 
-We're using aclemnt's [biblib](https://github.com/aclements/biblib) with a tiny hack to ignore parsing errors.
+We're using aclement's [biblib](https://github.com/aclements/biblib) with a tiny hack to ignore parsing errors.
