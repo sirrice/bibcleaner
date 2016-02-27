@@ -13,6 +13,7 @@ from collections import *
 
 import click
 import biblib.bib
+from urllib import parse
 import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
@@ -170,7 +171,7 @@ def new_mapping():
   try:
     print(request.form)
 
-    old = request.form['oldbook']
+    old = parse.unquote(request.form['oldbook'])
     new = request.form['newbook']
     print((old, new))
     try:
