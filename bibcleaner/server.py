@@ -90,22 +90,24 @@ def print_file(fname=""):
     FROM entries as E,
         (SELECT booktitle as oldbook, booktitle as newbook 
           FROM (SELECT distinct booktitle FROM entries) as foo 
-          WHERE booktitle NOT IN (SELECT oldbook FROM mapping)
+          WHERE booktitle NOT IN (SELECT oldbook FROM mapping) or booktitle is null
           UNION 
           select oldbook, newbook from mapping) as M
-    WHERE E.booktitle = M.oldbook
+    WHERE E.booktitle = M.oldbook or (E.booktitle is null and M.oldbook is null)
     """
     ents = sql_to_entries(q)
   else:
     q = """
     SELECT type, key, title, year, newbook as booktitle, author, howpublished, publisher, url
     FROM entries as E, files as f, file_entries as fe,
-        (SELECT booktitle as oldbook, booktitle as newbook 
+        (SELECT distinct booktitle as oldbook, booktitle as newbook 
           FROM (SELECT distinct booktitle FROM entries) as foo 
-          WHERE booktitle NOT IN (SELECT oldbook FROM mapping)
+          WHERE (booktitle NOT IN (SELECT oldbook FROM mapping) or 
+                 booktitle is null)
           UNION 
           select oldbook, newbook from mapping) as M
-    WHERE E.booktitle = M.oldbook and 
+    WHERE (E.booktitle = M.oldbook or 
+           (E.booktitle is null and M.oldbook is null)) and 
           fe.fid = f.rowid and 
           fe.eid = E.rowid and
           f.name = ?

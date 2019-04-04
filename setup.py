@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='bibcleaner',
-    version='0.0.7',
+    version='0.0.9',
     description='Poor man\'s bibtex cleaner and normalizer',
     url='https://github.com/sirrice/bibcleaner',
     author='Eugene wu',

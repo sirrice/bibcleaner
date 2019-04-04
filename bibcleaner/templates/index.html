@@ -82,9 +82,9 @@
   <h3>Editing Details</h3>
   <p>
   <ul>
-    <li>You can press up and down on the keyboard at anytime to move the selected booktitle. 
-    <li>You can also click on an entry to select it. 
-        We will return focus to the text input and select all of the text so you can start editing immediately.
+    <li>Press keyboard up/down at anytime to move the selected booktitle. 
+    <li>Click on entry to select it.  Focus will return to input box and select all of the text.
+    <li>Double click on entry to open new google search tab for book title.
     <li>Press enter to add a new mapping between the selected book title and the text in the input box.
         If the input box is empty, it means the selected book title is correct and we add an identity mapping
     <li>Adding a mapping removes the selected booktitle from the list and moves the selection to the next title.
@@ -147,12 +147,15 @@
   <div id="books"  style="height: 80%; overflow-y: scroll;">
 
     <ul>
-    {% for book in books %}
-    <li id="entry-{{loop.index}}">
-    <span style="width: 3em">{{book.count}}</span>
-    <span class="book" data-idx={{loop.index}} id="oldname-{{loop.index}}">{{book.name}}</span>
-    </li>
-    {% endfor %}
+      {% for book in books %}
+      <li id="entry-{{loop.index}}">
+      <span style="width: 3em">{{book.count}}</span>
+      <span class="book" data-idx={{loop.index}} id="oldname-{{loop.index}}">{{book.name}}</span>
+      </li>
+      {% endfor %}
+      {% if not books %}
+        <li>All books have mappings.  Click <a href="/print/{{fname}}">Export bibtex</a>.</li>
+      {% endif %}
     </ul>
 
 
@@ -249,11 +252,15 @@
     }
   }
   var addClick = function(idx) {
-    $("#oldname-"+idx).click(function(el) {
+    var item = $("#oldname-"+idx);
+    item.click(function(el) {
       curIdx = +$(this).data("idx")
       console.log("clicked: " + curIdx)
       select_entry(curIdx);
       $("#cmd").focus().select()
+    });
+    item.dblclick(function(el) {
+      window.open("https://www.google.com/search?q=" + item.text());
     });
   }
   _.times(nbooks+1, addClick);

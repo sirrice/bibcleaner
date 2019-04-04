@@ -93,7 +93,9 @@ def fix_synonyms(fields, synonyms):
 
 def tuple_to_entry(keys, row):
   # turn tuples into biblib.bib.Entry objects
-  list(map(keys.remove, filter(lambda v: v in keys, ['type', 'key'])))
+  if row['type'] not in entry_types:
+    if 'key' not in keys:
+      keys = keys + ['key']
   d = dict([(key, str(row[key])) for key in keys if row[key]])
   ent = biblib.bib.Entry(d.items())
   ent.typ = row['type']
@@ -101,7 +103,8 @@ def tuple_to_entry(keys, row):
   return ent
 
 def sql_to_entries(q, args=()):
-  print(" ".join(q.split("\n")))
+  print(q)
+  #print(" ".join(q.split("\n")))
 
   # turn tuples into biblib.bib.Entry objects
   ents = []
@@ -124,8 +127,13 @@ def load_bibfile(bibfile, min_crossrefs=None):
   """
   try:
     # Load databases
-    db = biblib.bib.Parser(paranoid=False).parse(bibfile, log_fp=sys.stderr).get_entries()
+    # Parser used to take "paranoid=False" as input
+    db = biblib.bib.Parser().parse(bibfile, log_fp=sys.stderr).get_entries()
+  except:
+    import traceback; traceback.print_exc()
+    sys.exit(1)
 
+  try:
     # Optionally resolve cross-references
     if min_crossrefs is not None:
       db = biblib.bib.resolve_crossrefs(
