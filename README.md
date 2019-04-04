@@ -1,12 +1,7 @@
 # Purpose
 
-Bibtex files are ridiculously messy, and the primary fields that matter are the authors, the 
-paper title, the book title, and the year of publications.  Unfortunately there are 
-_way too many_ formats for this!  
-
-There are numerous extraneous attributes in a typical bibtex entry that have no right
-to be in my paper!  Consider this example:
-
+Papers have page limits.
+Bibtex files are ridiculously messy, contain a ton of extraneous attributes that make the references ugly, inconsistent, and push you over the page limit.    Consider this example:
 
         @article{Kalashnikov06,
         author = {Kalashnikov, Dmitri V. and Mehrotra, Sharad},
@@ -26,7 +21,7 @@ to be in my paper!  Consider this example:
         address = {New York, NY, USA},
         }
 
-90% OF THESE ATTRIBUTES ARE TAKING UP PRECIOUS SPACE!  GO AWAY
+We only actually care about author, title, journal, and year.  The rest waste space.
 
 There are also multiple entry types, each with their own format (I realize there are subtle differences that I choose to ignore):
 
@@ -51,14 +46,14 @@ Booktitles/journals have pretty much no standard.  Consider the following versio
         Proceedings of the 1997 ACM SIGMOD International Conference on Management of Data
         In Proceedings of ACM SIGMOD
 
-Why? WHY?   They are also excessively long and taking up my precious space.
+Why? WHY? 
 
 ## BibCleaner
 
-bibcleaner is a utility  that performs the following
+bibcleaner is a utility  that:
 
-* parses (using [biblib](https://github.com/aclements/biblib)) loads a bibtex file and throws out
-  the unnecessary entry attributes.  It's kind and keeps sane attributes for non-inproceedings/journa/article
+* parses (using [biblib](https://github.com/aclements/biblib)) and loads a bibtex file and throws out
+  the unnecessary entry attributes.  It keeps sane attributes for non-inproceedings/journa/article
   entries.
 * the entries are saved in a sqlite database that can be queried
 * runs a small webserver with a simple GUI to clean the booktitles in your entries
@@ -77,7 +72,7 @@ Up and down arrow keys work and we try really hard to make the interface keyboar
 The left panel shows the mappings you have already created.  The blue text is the short normalized booktitle, and the red text are the original variations that map to the blue text.
 Click on a red text to remove that mapping.
 
-You can upload bibtex files, list the files you've uploaded, and export what you have.
+You can upload bibtex files, list the files you've uploaded, and export a clean bibtex file
 
 # Installation and Usage
 
@@ -89,38 +84,32 @@ This library requires:
 * [click](click.pocoo.org)
 * sqlalchemy
 
+Do the following
 
-We recommend usin a virtualenv environment for installation
-
-
+        # Setup a clean virtual env
         virtualenv new --python=<path to python3> <venv name>
 
-We use a custom version of `biblib`, so please download and install it manually
-
+        # Install custom biblib
         git clone https://github.com/sirrice/biblib.git
         cd biblib
         python setup.py install
 
-Install me!
-
+        # Install bibcleaner
         pip install bibcleaner
 
-        # OR
-
-        git clone https://github.com/sirrice/bibcleaner.git
-        cd bibcleaner
-        python setup.py install
-
-## Running
-
-Help: options can be combined
-
-        ./bibcleaner --help
+## Running the GUI
 
 The easiest is to just run the server and use the gui (click help in the upper right for instructions)
 
         ./bibcleaner --server --port 8000
         # go to localhost:8000
+
+
+#### Command Line Usage
+
+Help
+
+        ./bibcleaner --help
 
 
 Add entries
