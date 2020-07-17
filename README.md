@@ -114,11 +114,11 @@ Help
 
 Add entries
 
-      ./bibcleaner --bibname <path to bib file>
+      ./bibcleaner --bibpath <path to bib file>
 
 Clean up an existing bibtex file and print to stdout
 
-      ./bibcleaner --bibname <path> --printout
+      ./bibcleaner --bibpath <path> --printout
 
 After normalizing the book titles, output the cleaned entries into a new file
 
