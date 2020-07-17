@@ -23,7 +23,7 @@ from sqlalchemy.pool import NullPool
 # synonyms are reconciled to the dictionary key.  The list of synonyms is listed in priority order
 # e.g., all journal and article entry keys are renamed into booktitle keys
 synonyms = dict(
-    booktitle=['booktile', 'journal', 'article', 'publisher']
+    booktitle=['booktitle', 'journal', 'article', 'publisher']
 )
 
 # These constitute "real" article entries.  
@@ -84,10 +84,17 @@ for q in SETUPQS:
 def fix_synonyms(fields, synonyms):
   for key in synonyms:
     for syn in synonyms[key]:
-      if syn in fields and fields[syn]:
-        fields[key] = fields.get(syn)
-        del fields[syn]
-        break
+
+      # find the synonym in fields
+      found = False
+      for field in fields:
+        if syn == field.lower() and fields[field]:
+          fields[key] = fields.get(field)
+          if key != field:
+            del fields[field]
+          found = True
+          break
+      if found: break
   return fields
 
 
@@ -144,13 +151,14 @@ def load_bibfile(bibfile, min_crossrefs=None):
 
 
   ents = []
-  for ent in db.values():
+  for idx, ent in enumerate(db.values()):
     if not ent.key: continue
-    if ent.typ in entry_types:
+    if ent.typ.lower() in entry_types:
       keys = entry_keys
     else:
       ents.append(ent)
       continue
+
 
     vals = [" ".join(ent.get(key, '').split("\n")) for key in keys]
     # only keep keys that have non-null values
