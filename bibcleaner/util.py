@@ -211,10 +211,22 @@ def print_entries(printout, out, sort):
         f.write(ent.to_bib())
         f.write('\n')
 
+
+dont_capitalize = "a an the and but for nor or so yet to".split()
+
 def save_entries(entries):
   """
   insert entries into database
   """
+
+  # do any final post processing of the bibtex entries
+  for e in entries:
+    # Capitalize
+    if 'title' in e:
+      words = [w if w in dont_capitalize else w.title() for w in e['title'].split()]
+      e['title'] = " ".join(words)
+
+
   for e in entries:
     keys = set(e.keys()).intersection(allowed_keys)
     vals = list(map(e.get, keys))
