@@ -7,7 +7,7 @@ setup(
     url='https://github.com/sirrice/bibcleaner',
     author='Eugene wu',
     author_email='ewu@cs.columbia.edu',
-    packages=['bibcleaner'],
+    packages=['bibcleaner', 'bibcleaner.templates', 'bibcleaner.static'],
     include_package_data=True,
     package_data={
       'bibcleaner':['static/*', 'templates/*']
