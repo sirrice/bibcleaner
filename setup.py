@@ -2,8 +2,8 @@ from distutils.core import setup
 
 setup(
     name='bibcleaner',
-    version='0.0.11',
-    description='Poor person\'s bibtex cleaner and normalizer',
+    version='0.0.12',
+    description='Super simple bibtex cleaner and normalizer',
     url='https://github.com/sirrice/bibcleaner',
     author='Eugene wu',
     author_email='ewu@cs.columbia.edu',
@@ -25,6 +25,11 @@ setup(
         'Topic :: Text Processing',
     ],
     long_description='see http://github.com/sirrice/bibcleaner',
-    install_requires = [ 'click', 'sqlalchemy', 'Flask', 'biblib' ],
+    install_requires = [ 
+        'click', 
+        'sqlalchemy==1.4',
+        'Flask', 
+        'biblib @ git+ssh://git@github.com/sirrice/biblib.git'
+        ],
     dependency_links=['https://github.com/sirrice/biblib/archive/master.zip']
 )

@@ -116,7 +116,7 @@ def sql_to_entries(q, args=()):
   # turn tuples into biblib.bib.Entry objects
   ents = []
   cur = engine.execute(q, args)
-  keys = cur.keys()
+  keys = list(cur.keys())
   list(map(keys.remove, ['type', 'key']))
   for row in cur:
     ents.append(tuple_to_entry(keys, row))
